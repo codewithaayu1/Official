@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AODLC — Learning Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDk8KtN9cqBoxOde1y0rbYgMemSdaiwf68",
+    authDomain: "official-website-34d71.firebaseapp.com",
+    databaseURL: "https://official-website-34d71-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "official-website-34d71",
+    storageBucket: "official-website-34d71.firebasestorage.app",
+    messagingSenderId: "350466495844",
+    appId: "1:350466495844:web:b18bbac6ff1a4965ea9671"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
+  window._fb = { db, auth, ref, set, get, push, remove, onValue, update, signInWithEmailAndPassword, signOut };
+</script>
+
+<style>
+:root {
+  --primary: #1a3a6e;
+  --primary-light: #2251a3;
+  --secondary: #1a5c2e;
+  --gold: #c8a84b;
+  --gold-light: #e8c96a;
+  --gold-pale: #f5e9c4;
+  --bg: #f0f4ff;
+  --white: #ffffff;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --text2: #64748b;
+  --green: #16a34a;
+  --red: #ef4444;
+  --orange: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box }
+html { scroll-behavior:smooth }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh }
+::-webkit-scrollbar { width:6px }
+::-webkit-scrollbar-track { background:var(--bg) }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px }
+
+/* ===== LOGIN ===== */
+.lms-login {
+  min-height:100vh; display:flex; align-items:center;
+  justify-content:center; padding:20px;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 40%,var(--secondary) 100%);
+  position:relative; overflow:hidden;
+}
+.lms-login::before {
+  content:''; position:absolute; top:-100px; right:-100px;
+  width:400px; height:400px; border-radius:50%;
+  background:rgba(200,168,75,.1);
+}
+.lms-login::after {
+  content:''; position:absolute; bottom:-80px; left:-80px;
+  width:300px; height:300px; border-radius:50%;
+  background:rgba(255,255,255,.05);
+}
+.login-card {
+  background:var(--white); border-radius:24px;
+  padding:44px 40px; width:100%; max-width:440px;
+  box-shadow:0 25px 70px rgba(0,0,0,.25);
+  position:relative; z-index:1;
+}
+.login-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:4px;
+  background:linear-gradient(90deg,var(--primary),var(--gold),var(--secondary));
+  border-radius:24px 24px 0 0;
+}
+.login-logo { text-align:center; margin-bottom:28px }
+.login-logo-icon {
+  width:72px; height:72px; border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:0 auto 14px;
+  box-shadow:0 8px 25px rgba(26,58,110,.3);
+}
+.login-logo h2 {
+  font-family:'Syne',sans-serif; font-size:22px;
+  font-weight:800; color:var(--primary);
+}
+.login-logo p { font-size:13px; color:var(--text2); margin-top:4px }
+.login-tabs {
+  display:flex; border:2px solid var(--border);
+  border-radius:12px; overflow:hidden; margin-bottom:24px;
+}
+.login-tab {
+  flex:1; padding:11px; text-align:center;
+  font-size:13px; font-weight:700; cursor:pointer;
+  border:none; background:transparent;
+  font-family:'Syne',sans-serif; transition:all .3s; color:var(--text2);
+}
+.login-tab.active { background:var(--primary); color:#fff }
+.login-form { display:none }
+.login-form.active { display:block }
+.lf-group { margin-bottom:16px }
+.lf-group label {
+  display:block; font-size:11.5px; font-weight:700;
+  color:var(--text2); margin-bottom:6px;
+  text-transform:uppercase; letter-spacing:.6px;
+}
+.lf-group input {
+  width:100%; padding:12px 14px;
+  border:1.5px solid var(--border); border-radius:10px;
+  font-size:14px; font-family:'DM Sans',sans-serif;
+  outline:none; transition:all .3s;
+}
+.lf-group input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(26,58,110,.1) }
+.lms-login-btn {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff; border:none; border-radius:10px;
+  font-size:15px; font-weight:700; cursor:pointer;
+  font-family:'Syne',sans-serif; transition:all .3s;
+}
+.lms-login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(26,58,110,.35) }
+.lms-error {
+  background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25);
+  border-radius:8px; padding:10px 14px; font-size:13px;
+  color:var(--red); text-align:center; margin-top:12px; display:none;
+}
+.lms-error.show { display:block }
+
+/* ===== MAIN APP ===== */
+.lms-app { display:none; min-height:100vh }
+.lms-app.show { display:flex }
+
+/* SIDEBAR */
+.lms-sidebar {
+  width:260px; background:var(--primary);
+  position:fixed; top:0; left:0; height:100vh;
+  display:flex; flex-direction:column; z-index:100;
+  overflow-y:auto; transition:transform .3s;
+}
+.lms-sb-head {
+  padding:20px 18px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  border-bottom:2px solid rgba(200,168,75,.4); flex-shrink:0;
+}
+.lms-sb-brand { display:flex; align-items:center; gap:11px; margin-bottom:14px }
+.lms-sb-icon {
+  width:42px; height:42px; border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:900; color:var(--primary); flex-shrink:0;
+}
+.lms-sb-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; color:#fff; line-height:1.2 }
+.lms-sb-title span { font-size:10px; color:rgba(255,255,255,.6); font-weight:400; display:block }
+.lms-user-card {
+  background:rgba(255,255,255,.1); border-radius:12px;
+  padding:13px 14px; display:flex; align-items:center; gap:11px;
+}
+.lms-user-av {
+  width:42px; height:42px; border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; color:var(--primary); font-size:18px;
+  flex-shrink:0; border:2px solid rgba(255,255,255,.3);
+}
+.lms-user-name { font-size:13px; font-weight:700; color:#fff }
+.lms-user-id { font-size:11px; color:rgba(255,255,255,.6) }
+.lms-user-prog {
+  display:inline-block; background:var(--gold);
+  color:var(--primary); font-size:10px; font-weight:700;
+  padding:2px 9px; border-radius:20px; margin-top:4px;
+}
+.lms-sb-nav { flex:1; padding:10px 0; overflow-y:auto }
+.lms-nav-sec {
+  font-size:9px; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(255,255,255,.35);
+  padding:10px 18px 5px;
+}
+.lms-nav-link {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 18px; font-size:13px; font-weight:500;
+  color:rgba(255,255,255,.65); cursor:pointer;
+  border:none; background:transparent; width:100%;
+  text-align:left; font-family:'DM Sans',sans-serif; transition:all .2s;
+}
+.lms-nav-link:hover { background:rgba(255,255,255,.08); color:#fff }
+.lms-nav-link.active {
+  background:rgba(200,168,75,.2); color:var(--gold);
+  border-right:3px solid var(--gold);
+}
+.lms-nav-link .lni { font-size:18px; flex-shrink:0; width:22px; text-align:center }
+.lms-nav-link .lbadge {
+  margin-left:auto; background:var(--red); color:#fff;
+  font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px;
+}
+.lms-sb-foot { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); flex-shrink:0 }
+.lms-logout {
+  width:100%; padding:10px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.8); border-radius:8px; font-size:13px;
+  font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .3s;
+}
+.lms-logout:hover { background:var(--red); border-color:var(--red); color:#fff }
+
+/* MAIN */
+.lms-main { margin-left:260px; flex:1; min-height:100vh; display:flex; flex-direction:column }
+.lms-topbar {
+  background:var(--white); padding:13px 22px;
+  display:flex; justify-content:space-between; align-items:center;
+  box-shadow:0 1px 10px rgba(0,0,0,.06); position:sticky; top:0; z-index:50;
+  border-bottom:3px solid var(--gold);
+}
+.lms-topbar h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--primary) }
+.lms-mob-btn {
+  display:none; padding:8px; background:var(--bg);
+  border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:18px;
+}
+.lms-content { padding:22px; flex:1 }
+.lms-panel { display:none }
+.lms-panel.active { display:block }
+
+/* CARDS */
+.lms-card {
+  background:var(--card); border-radius:14px;
+  padding:22px; box-shadow:0 2px 12px rgba(0,0,0,.06);
+  margin-bottom:18px; border:1px solid var(--border);
+}
+.lms-card-title {
+  font-family:'Syne',sans-serif; font-size:17px; font-weight:700;
+  color:var(--primary); margin-bottom:16px; padding-bottom:12px;
+  border-bottom:2px solid var(--gold-pale);
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.lms-card-title small { font-size:13px; color:var(--text2); font-family:'DM Sans',sans-serif; font-weight:400 }
+
+/* DASHBOARD */
+.lms-dash-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px }
+.lms-dash-card {
+  background:var(--card); border-radius:14px; padding:20px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06); border-top:3px solid transparent;
+  transition:all .3s;
+}
+.lms-dash-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,.1) }
+.lms-dash-card:nth-child(1) { border-top-color:var(--primary) }
+.lms-dash-card:nth-child(2) { border-top-color:var(--secondary) }
+.lms-dash-card:nth-child(3) { border-top-color:var(--gold) }
+.lms-dash-card:nth-child(4) { border-top-color:var(--red) }
+.ldc-icon { font-size:28px; margin-bottom:8px }
+.ldc-val { font-family:'Syne',sans-serif; font-size:26px; font-weight:900; color:var(--primary); line-height:1 }
+.ldc-label { font-size:12px; color:var(--text2); margin-top:4px; font-weight:500 }
+
+/* PROGRESS BAR */
+.prog-bar-wrap { margin-bottom:16px }
+.prog-bar-label { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px }
+.prog-bar-label span:first-child { font-weight:600; color:var(--text) }
+.prog-bar-label span:last-child { font-weight:700; color:var(--primary) }
+.prog-bar { height:10px; background:var(--border); border-radius:5px; overflow:hidden }
+.prog-bar-fill { height:100%; border-radius:5px; transition:width .8s ease }
+.prog-green { background:linear-gradient(90deg,var(--secondary),#22c55e) }
+.prog-blue { background:linear-gradient(90deg,var(--primary),var(--primary-light)) }
+.prog-gold { background:linear-gradient(90deg,var(--gold),var(--gold-light)) }
+
+/* MATERIAL ITEM */
+.mat-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 0; border-bottom:1px solid var(--border);
+  transition:all .2s;
+}
+.mat-item:last-child { border-bottom:none }
+.mat-item:hover { background:transparent }
+.mat-icon {
+  width:46px; height:46px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0;
+}
+.mat-icon.pdf { background:#fee2e2; }
+.mat-icon.video { background:#dbeafe; }
+.mat-icon.doc { background:#dcfce7; }
+.mat-info { flex:1 }
+.mat-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px }
+.mat-meta { font-size:12px; color:var(--text2); display:flex; gap:10px; flex-wrap:wrap }
+.mat-actions { display:flex; gap:8px; flex-shrink:0 }
+.btn-dl {
+  padding:8px 16px; background:var(--primary); color:#fff;
+  border:none; border-radius:8px; font-size:12.5px; font-weight:600;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .3s;
+}
+.btn-dl:hover { background:var(--primary-light); transform:translateY(-1px) }
+.btn-watch {
+  padding:8px 16px; background:#dbeafe; color:var(--primary);
+  border:none; border-radius:8px; font-size:12.5px; font-weight:600;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .3s;
+}
+.btn-watch:hover { background:var(--primary); color:#fff }
+
+/* VIDEO PLAYER */
+.video-modal {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.85); z-index:9999;
+  align-items:center; justify-content:center; padding:20px;
+}
+.video-modal.open { display:flex }
+.video-box {
+  background:#000; border-radius:14px; overflow:hidden;
+  width:100%; max-width:820px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.video-box-head {
+  background:var(--primary); padding:12px 18px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.video-box-head h4 { font-size:14px; font-weight:700; color:#fff }
+.video-close {
+  background:rgba(255,255,255,.15); border:none; color:#fff;
+  width:30px; height:30px; border-radius:50%; font-size:18px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.video-close:hover { background:var(--red) }
+.video-frame { position:relative; padding-bottom:56.25%; height:0; overflow:hidden }
+.video-frame iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none }
+
+/* ASSIGNMENT */
+.assign-item {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:12px; padding:16px; margin-bottom:12px;
+}
+.assign-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px }
+.assign-title { font-size:15px; font-weight:700; color:var(--primary) }
+.assign-meta { font-size:12.5px; color:var(--text2); margin-top:3px; display:flex; gap:12px; flex-wrap:wrap }
+.assign-due { background:#fee2e2; color:var(--red); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700 }
+.assign-due.ok { background:#dcfce7; color:var(--green) }
+.assign-due.submitted { background:#dbeafe; color:var(--primary) }
+.assign-desc { font-size:13.5px; color:var(--text2); line-height:1.7; margin-bottom:12px }
+.assign-submit-area { display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap }
+.assign-textarea {
+  flex:1; min-width:200px; padding:10px 13px;
+  border:1.5px solid var(--border); border-radius:8px;
+  font-size:13.5px; font-family:'DM Sans',sans-serif;
+  outline:none; resize:vertical; min-height:80px; transition:all .3s;
+}
+.assign-textarea:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(26,58,110,.1) }
+.btn-submit-assign {
+  padding:10px 20px; background:linear-gradient(135deg,var(--secondary),#22c55e);
+  color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:700;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .3s; white-space:nowrap;
+}
+.btn-submit-assign:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(22,163,74,.35) }
+.assign-submitted-badge {
+  background:#dcfce7; border:1px solid #86efac;
+  border-radius:8px; padding:10px 14px; font-size:13px;
+  color:var(--green); font-weight:600; display:flex; align-items:center; gap:8px;
+}
+
+/* QUIZ */
+.quiz-card {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:12px; padding:18px; margin-bottom:12px;
+}
+.quiz-title { font-size:15px; font-weight:700; color:var(--primary); margin-bottom:4px }
+.quiz-meta { font-size:12.5px; color:var(--text2); margin-bottom:12px }
+.quiz-start-btn {
+  padding:10px 22px; background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff; border:none; border-radius:8px; font-size:13.5px; font-weight:700;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .3s;
+}
+.quiz-start-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(26,58,110,.35) }
+.quiz-overlay {
+  display:none; position:fixed; inset:0;
+  background:var(--bg); z-index:9990; overflow-y:auto; padding:20px;
+}
+.quiz-overlay.open { display:block }
+.quiz-container { max-width:720px; margin:0 auto; padding:20px 0 }
+.quiz-header {
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  border-radius:14px; padding:22px; margin-bottom:22px; color:#fff;
+}
+.quiz-header h2 { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; margin-bottom:6px }
+.quiz-progress-bar { height:8px; background:rgba(255,255,255,.2); border-radius:4px; margin-top:14px; overflow:hidden }
+.quiz-progress-fill { height:100%; background:var(--gold); border-radius:4px; transition:width .4s }
+.quiz-question-card {
+  background:var(--white); border-radius:14px; padding:26px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:16px;
+}
+.quiz-q-num { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px }
+.quiz-q-text { font-size:16px; font-weight:600; color:var(--text); line-height:1.6; margin-bottom:18px }
+.quiz-option {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 16px; border:2px solid var(--border);
+  border-radius:10px; margin-bottom:10px; cursor:pointer;
+  transition:all .2s; font-size:14px; color:var(--text);
+}
+.quiz-option:hover { border-color:var(--primary); background:#f0f4ff }
+.quiz-option.selected { border-color:var(--primary); background:#dbeafe; color:var(--primary); font-weight:600 }
+.quiz-option.correct { border-color:var(--green); background:#dcfce7; color:var(--green); font-weight:700 }
+.quiz-option.wrong { border-color:var(--red); background:#fee2e2; color:var(--red); font-weight:700 }
+.quiz-option-circle {
+  width:28px; height:28px; border-radius:50%; border:2px solid currentColor;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; flex-shrink:0;
+}
+.quiz-nav { display:flex; justify-content:space-between; align-items:center; margin-top:16px }
+.quiz-btn {
+  padding:11px 24px; border-radius:8px; font-size:14px;
+  font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; border:none; transition:all .3s;
+}
+.quiz-btn-prev { background:var(--bg); color:var(--text2); border:1px solid var(--border) }
+.quiz-btn-next { background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff }
+.quiz-btn-submit { background:linear-gradient(135deg,var(--secondary),#22c55e); color:#fff }
+.quiz-result {
+  background:var(--white); border-radius:20px; padding:40px;
+  text-align:center; box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.quiz-result-score {
+  font-family:'Syne',sans-serif; font-size:64px; font-weight:900;
+  line-height:1; margin:16px 0;
+}
+.quiz-result-score.pass { color:var(--green) }
+.quiz-result-score.fail { color:var(--red) }
+
+/* TIMETABLE */
+.tt-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px }
+.tt-day { font-weight:700; font-size:12.5px; color:var(--primary); text-align:center; padding:8px; background:var(--gold-pale); border-radius:8px; border:1px solid var(--gold) }
+.tt-slot {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:8px; padding:10px; font-size:12px;
+  text-align:center; min-height:70px; display:flex;
+  flex-direction:column; align-items:center; justify-content:center; gap:4px;
+}
+.tt-slot.has-class { background:#dbeafe; border-color:var(--primary) }
+.tt-slot.has-class .tt-subj { font-weight:700; color:var(--primary); font-size:12.5px }
+.tt-slot .tt-time { font-size:10.5px; color:var(--text2) }
+.tt-slot.empty { color:var(--text2); font-size:11px }
+
+/* TOAST */
+.toast {
+  position:fixed; top:20px; right:20px; z-index:99999;
+  padding:13px 18px; border-radius:10px; font-size:14px; font-weight:600;
+  transform:translateX(120%); transition:transform .4s ease;
+  max-width:300px; box-shadow:0 8px 30px rgba(0,0,0,.15);
+}
+.toast.show { transform:translateX(0) }
+.toast.success { background:#dcfce7; border:1px solid #86efac; color:var(--green) }
+.toast.error { background:#fee2e2; border:1px solid #fca5a5; color:var(--red) }
+.toast.info { background:#dbeafe; border:1px solid #93c5fd; color:var(--primary) }
+
+/* BADGE */
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700 }
+.badge-blue { background:#dbeafe; color:var(--primary) }
+.badge-green { background:#dcfce7; color:var(--green) }
+.badge-gold { background:var(--gold-pale); color:#92400e }
+.badge-red { background:#fee2e2; color:var(--red) }
+
+@media(max-width:900px) {
+  .lms-sidebar { transform:translateX(-100%) }
+  .lms-sidebar.open { transform:translateX(0) }
+  .lms-main { margin-left:0 }
+  .lms-mob-btn { display:flex; align-items:center; justify-content:center }
+  .lms-dash-grid { grid-template-columns:1fr 1fr }
+  .tt-grid { grid-template-columns:repeat(3,1fr) }
+}
+@media(max-width:560px) {
+  .lms-dash-grid { grid-template-columns:1fr 1fr }
+  .lms-content { padding:14px }
+  .tt-grid { grid-template-columns:repeat(2,1fr) }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div class="lms-login" id="lmsLogin">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">📚</div>
+      <h2>AODLC Learning Portal</h2>
+      <p>Learning Management System</p>
+    </div>
+    <div class="login-tabs">
+      <button class="login-tab active" id="lt-student" onclick="switchLoginTab('student')">🎓 Student</button>
+      <button class="login-tab" id="lt-lms" onclick="switchLoginTab('lms')">🏫 LMS Code</button>
+    </div>
+
+    <!-- Student Login -->
+    <div class="login-form active" id="lf-student">
+      <div class="lf-group">
+        <label>Enrollment ID</label>
+        <input type="text" id="ls-enroll" placeholder="e.g. AODLC/2026/00001" autocomplete="off">
+      </div>
+      <div class="lf-group">
+        <label>Password</label>
+        <input type="password" id="ls-pass" placeholder="Enter your password">
+      </div>
+      <button class="lms-login-btn" onclick="doLmsLogin()">🎓 Login to LMS</button>
+      <div class="lms-error" id="lmsLoginErr"></div>
+    </div>
+
+    <!-- LMS Code Login -->
+    <div class="login-form" id="lf-lms">
+      <div class="lf-group">
+        <label>LMS Access Code</label>
+        <input type="text" id="ls-lmsCode" placeholder="Enter LMS Code" style="text-transform:uppercase">
+      </div>
+      <div class="lf-group">
+        <label>Password</label>
+        <input type="password" id="ls-lmsPass" placeholder="Enter password">
+      </div>
+      <button class="lms-login-btn" onclick="doLmsCodeLogin()">📚 Access LMS</button>
+      <div class="lms-error" id="lmsCodeErr"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;font-size:12.5px;color:var(--text2)">
+      Forgot login? Contact admin: <strong style="color:var(--primary)">9954190601</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LMS APP ===== -->
+<div class="lms-app" id="lmsApp">
+
+  <!-- SIDEBAR -->
+  <div class="lms-sidebar" id="lmsSidebar">
+    <div class="lms-sb-head">
+      <div class="lms-sb-brand">
+        <div class="lms-sb-icon">📚</div>
+        <div>
+          <div class="lms-sb-title">AODLC LMS<span>Learning Portal</span></div>
+        </div>
+      </div>
+      <div class="lms-user-card">
+        <div class="lms-user-av" id="lms-av">S</div>
+        <div>
+          <div class="lms-user-name" id="lms-uname">Student</div>
+          <div class="lms-user-id" id="lms-uid">--</div>
+          <div><span class="lms-user-prog" id="lms-uprog">--</span></div>
+        </div>
+      </div>
+    </div>
+    <nav class="lms-sb-nav">
+      <div class="lms-nav-sec">Main</div>
+      <button class="lms-nav-link active" onclick="showLmsPanel('dashboard',this)">
+        <span class="lni">🏠</span> Dashboard
+      </button>
+      <div class="lms-nav-sec">Learning</div>
+      <button class="lms-nav-link" onclick="showLmsPanel('materials',this)">
+        <span class="lni">📄</span> Study Materials
+      </button>
+      <button class="lms-nav-link" onclick="showLmsPanel('videos',this)">
+        <span class="lni">🎥</span> Video Lectures
+      </button>
+      <button class="lms-nav-link" onclick="showLmsPanel('timetable',this)">
+        <span class="lni">📅</span> Timetable
+      </button>
+      <div class="lms-nav-sec">Assessment</div>
+      <button class="lms-nav-link" onclick="showLmsPanel('assignments',this)">
+        <span class="lni">📝</span> Assignments
+        <span class="lbadge" id="pending-assign-count">0</span>
+      </button>
+      <button class="lms-nav-link" onclick="showLmsPanel('quiz',this)">
+        <span class="lni">🧠</span> Quiz / Tests
+      </button>
+      <div class="lms-nav-sec">My Progress</div>
+      <button class="lms-nav-link" onclick="showLmsPanel('progress',this)">
+        <span class="lni">📊</span> My Progress
+      </button>
+    </nav>
+    <div class="lms-sb-foot">
+      <button class="lms-logout" onclick="lmsLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="lms-main">
+    <div class="lms-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="lms-mob-btn" onclick="document.getElementById('lmsSidebar').classList.toggle('open')">☰</button>
+        <h3 id="lmsPanelTitle">Dashboard</h3>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--text2)" id="lmsTime">--:--</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text2)" id="lmsDate"></span>
+      </div>
+    </div>
+
+    <div class="lms-content">
+
+      <!-- DASHBOARD -->
+      <div class="lms-panel active" id="lpan-dashboard">
+        <div style="margin-bottom:20px">
+          <h2 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--primary)">
+            Welcome back, <span id="dash-name">Student</span>! 👋
+          </h2>
+          <p style="font-size:14px;color:var(--text2);margin-top:4px" id="dash-date"></p>
+        </div>
+        <div class="lms-dash-grid">
+          <div class="lms-dash-card"><div class="ldc-icon">📄</div><div class="ldc-val" id="dc-materials">0</div><div class="ldc-label">Study Materials</div></div>
+          <div class="lms-dash-card"><div class="ldc-icon">🎥</div><div class="ldc-val" id="dc-videos">0</div><div class="ldc-label">Video Lectures</div></div>
+          <div class="lms-dash-card"><div class="ldc-icon">📝</div><div class="ldc-val" id="dc-assignments">0</div><div class="ldc-label">Pending Assignments</div></div>
+          <div class="lms-dash-card"><div class="ldc-icon">🏆</div><div class="ldc-val" id="dc-progress">0%</div><div class="ldc-label">Overall Progress</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div class="lms-card">
+            <div class="lms-card-title">📊 Course Progress</div>
+            <div id="dash-progress-bars">
+              <div style="color:var(--text2);text-align:center;padding:16px;font-size:13px">Loading...</div>
+            </div>
+          </div>
+          <div class="lms-card">
+            <div class="lms-card-title">📝 Recent Assignments</div>
+            <div id="dash-recent-assign">
+              <div style="color:var(--text2);text-align:center;padding:16px;font-size:13px">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STUDY MATERIALS -->
+      <div class="lms-panel" id="lpan-materials">
+        <div class="lms-card">
+          <div class="lms-card-title">
+            📄 Study Materials
+            <div style="display:flex;gap:8px">
+              <select id="mat-filter" onchange="filterMaterials()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+                <option value="all">All Subjects</option>
+              </select>
+            </div>
+          </div>
+          <div id="materials-list">
+            <div style="color:var(--text2);text-align:center;padding:30px">Loading materials...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO LECTURES -->
+      <div class="lms-panel" id="lpan-videos">
+        <div class="lms-card">
+          <div class="lms-card-title">🎥 Video Lectures</div>
+          <div id="videos-list">
+            <div style="color:var(--text2);text-align:center;padding:30px">Loading videos...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMETABLE -->
+      <div class="lms-panel" id="lpan-timetable">
+        <div class="lms-card">
+          <div class="lms-card-title">📅 Weekly Timetable</div>
+          <div style="overflow-x:auto">
+            <div style="min-width:600px">
+              <div class="tt-grid" id="timetable-grid">
+                <div style="color:var(--text2);text-align:center;padding:30px;grid-column:1/-1">Loading timetable...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSIGNMENTS -->
+      <div class="lms-panel" id="lpan-assignments">
+        <div class="lms-card">
+          <div class="lms-card-title">
+            📝 Assignments
+            <div style="display:flex;gap:8px">
+              <select id="assign-filter" onchange="filterAssignments()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="submitted">Submitted</option>
+              </select>
+            </div>
+          </div>
+          <div id="assignments-list">
+            <div style="color:var(--text2);text-align:center;padding:30px">Loading assignments...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="lms-panel" id="lpan-quiz">
+        <div class="lms-card">
+          <div class="lms-card-title">🧠 Quiz & Tests</div>
+          <div id="quiz-list">
+            <div style="color:var(--text2);text-align:center;padding:30px">Loading quizzes...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="lms-panel" id="lpan-progress">
+        <div class="lms-card">
+          <div class="lms-card-title">📊 My Progress Tracker</div>
+          <div id="progress-content">
+            <div style="color:var(--text2);text-align:center;padding:30px">Loading progress...</div>
+          </div>
+        </div>
+        <div class="lms-card">
+          <div class="lms-card-title">🏆 Quiz Results History</div>
+          <div id="quiz-history">
+            <div style="color:var(--text2);text-align:center;padding:20px;font-size:13px">No quiz attempts yet</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="video-modal" id="videoModal">
+  <div class="video-box">
+    <div class="video-box-head">
+      <h4 id="video-title">Video Lecture</h4>
+      <button class="video-close" onclick="closeVideo()">✕</button>
+    </div>
+    <div class="video-frame">
+      <iframe id="video-iframe" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ OVERLAY -->
+<div class="quiz-overlay" id="quizOverlay">
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px">Quiz</div>
+          <h2 id="quiz-overlay-title">Quiz Title</h2>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:24px;font-weight:900;color:var(--gold)" id="quiz-timer">00:00</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6)">Time Left</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.7);margin-top:10px">
+        <span id="quiz-q-counter">Question 1 of 10</span>
+        <span id="quiz-score-live">Score: 0</span>
+      </div>
+      <div class="quiz-progress-bar">
+        <div class="quiz-progress-fill" id="quiz-prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="quiz-question-area"></div>
+    <div class="quiz-nav">
+      <button class="quiz-btn quiz-btn-prev" id="quiz-prev-btn" onclick="quizPrev()">← Previous</button>
+      <span id="quiz-q-indicator" style="font-size:13px;color:var(--text2)">1/10</span>
+      <button class="quiz-btn quiz-btn-next" id="quiz-next-btn" onclick="quizNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="lmsToast"></div>
+
+<script>
+// ===== STATE =====
+var currentLmsUser = null;
+var allMaterials = [];
+var allVideos = [];
+var allAssignments = [];
+var allQuizzes = [];
+var submittedAssignments = {};
+var quizResults = {};
+var currentQuiz = null;
+var currentQIndex = 0;
+var quizAnswers = {};
+var quizTimerInterval = null;
+var quizTimeLeft = 0;
+
+// ===== HELPERS =====
+function fb() { return window._fb; }
+function dbRef(path) { var f=fb(); return f.ref(f.db,path); }
+function dbGet(path) { var f=fb(); return f.get(f.ref(f.db,path)); }
+function dbSet(path,val) { var f=fb(); return f.set(f.ref(f.db,path),val); }
+function dbPush(path,val) { var f=fb(); return f.push(f.ref(f.db,path),val); }
+function dbOn(path,cb) { var f=fb(); f.onValue(f.ref(f.db,path),cb); }
+
+function lmsToast(msg,type) {
+  var t=document.getElementById('lmsToast');
+  t.textContent=msg; t.className='toast '+type;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3500);
+}
+
+function getTime() { return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function getDate() { return new Date().toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+
+setInterval(function(){
+  var t=document.getElementById('lmsTime');
+  if(t) t.textContent=getTime();
+},1000);
+
+// ===== LOGIN =====
+function switchLoginTab(tab) {
+  document.querySelectorAll('.login-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.login-form').forEach(function(f){f.classList.remove('active');});
+  document.getElementById('lt-'+tab).classList.add('active');
+  document.getElementById('lf-'+tab).classList.add('active');
+}
+
+function doLmsLogin() {
+  var enroll = document.getElementById('ls-enroll').value.trim();
+  var pass = document.getElementById('ls-pass').value;
+  var errEl = document.getElementById('lmsLoginErr');
+  errEl.classList.remove('show');
+  if(!enroll) { errEl.textContent='Please enter Enrollment ID'; errEl.classList.add('show'); return; }
+  if(!pass) { errEl.textContent='Please enter password'; errEl.classList.add('show'); return; }
+  dbGet('students').then(function(snap) {
+    var students = snap.val() || {};
+    var found = null;
+    Object.values(students).forEach(function(s) {
+      if(s.id && s.id.toLowerCase() === enroll.toLowerCase()) found = s;
+    });
+    if(!found) { errEl.textContent='Enrollment ID not found!'; errEl.classList.add('show'); return; }
+    if(!found.password) { errEl.textContent='Password not set. Contact admin.'; errEl.classList.add('show'); return; }
+    if(found.password !== btoa(pass) && found.password !== pass) {
+      errEl.textContent='Wrong password!'; errEl.classList.add('show'); return;
+    }
+    currentLmsUser = found;
+    openLmsApp(found);
+  }).catch(function(e) { errEl.textContent='Error: '+e.message; errEl.classList.add('show'); });
+}
+
+function doLmsCodeLogin() {
+  var code = document.getElementById('ls-lmsCode').value.trim().toUpperCase();
+  var pass = document.getElementById('ls-lmsPass').value;
+  var errEl = document.getElementById('lmsCodeErr');
+  errEl.classList.remove('show');
+  if(!code||!pass) { errEl.textContent='Please fill all fields'; errEl.classList.add('show'); return; }
+  dbGet('lmsUsers').then(function(snap) {
+    var users = snap.val() || {};
+    var found = null;
+    Object.values(users).forEach(function(u) {
+      if(u.code && u.code.toUpperCase() === code) found = u;
+    });
+    if(!found) { errEl.textContent='LMS Code not found!'; errEl.classList.add('show'); return; }
+    if(found.password !== btoa(pass) && found.password !== pass) {
+      errEl.textContent='Wrong password!'; errEl.classList.add('show'); return;
+    }
+    currentLmsUser = {name:found.name, id:found.code, programme:found.programme||'All', isLmsUser:true};
+    openLmsApp(currentLmsUser);
+  }).catch(function(e) { errEl.textContent='Error: '+e.message; errEl.classList.add('show'); });
+}
+
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Enter') {
+    if(document.getElementById('lf-student').classList.contains('active')) doLmsLogin();
+    else doLmsCodeLogin();
+  }
+});
+
+// ===== OPEN LMS =====
+function openLmsApp(user) {
+  document.getElementById('lmsLogin').style.display = 'none';
+  document.getElementById('lmsApp').classList.add('show');
+  var initial = user.name ? user.name.charAt(0).toUpperCase() : 'S';
+  document.getElementById('lms-av').textContent = initial;
+  document.getElementById('lms-uname').textContent = user.name || '--';
+  document.getElementById('lms-uid').textContent = user.id || '--';
+  document.getElementById('lms-uprog').textContent = user.programme || '--';
+  document.getElementById('dash-name').textContent = (user.name||'Student').split(' ')[0];
+  document.getElementById('dash-date').textContent = getDate();
+  document.getElementById('lmsDate').textContent = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  loadLmsContent(user);
+}
+
+// ===== LOAD CONTENT =====
+function loadLmsContent(user) {
+  loadMaterials(user);
+  loadVideos(user);
+  loadAssignments(user);
+  loadQuizzes(user);
+  loadTimetable(user);
+  loadStudentProgress(user);
+  loadSubmittedAssignments(user);
+  loadQuizHistory(user);
+}
+
+// ===== STUDY MATERIALS =====
+function loadMaterials(user) {
+  dbOn('lmsMaterials', function(snap) {
+    var data = snap.val() || {};
+    allMaterials = Object.entries(data).map(function(e){return {key:e[0],...e[1]};});
+    // Filter by programme
+    if(user.programme && user.programme !== 'All') {
+      allMaterials = allMaterials.filter(function(m){return !m.programme||m.programme==='All'||m.programme===user.programme;});
+    }
+    document.getElementById('dc-materials').textContent = allMaterials.length;
+
+    // Populate subject filter
+    var subjects = [...new Set(allMaterials.map(function(m){return m.subject||'General';}))];
+    var sel = document.getElementById('mat-filter');
+    sel.innerHTML = '<option value="all">All Subjects</option>';
+    subjects.forEach(function(s){sel.innerHTML+='<option value="'+s+'">'+s+'</option>';});
+
+    // If no data, show demo
+    if(!allMaterials.length) {
+      allMaterials = getDemoMaterials(user.programme);
+      document.getElementById('dc-materials').textContent = allMaterials.length;
+    }
+    renderMaterials(allMaterials);
+  });
+}
+
+function getDemoMaterials(prog) {
+  var base = [
+    {key:'m1',name:'Hindi Major — Unit 1-4 Notes',subject:'Hindi',type:'PDF',size:'2.4 MB',uploaded:'15 Mar 2026'},
+    {key:'m2',name:'English Grammar — Complete Guide',subject:'English',type:'PDF',size:'1.8 MB',uploaded:'14 Mar 2026'},
+    {key:'m3',name:'Political Science — Democracy & Governance',subject:'Pol. Science',type:'PDF',size:'3.1 MB',uploaded:'12 Mar 2026'},
+    {key:'m4',name:'History of India — Ancient to Modern',subject:'History',type:'PDF',size:'2.7 MB',uploaded:'10 Mar 2026'},
+    {key:'m5',name:'Economics — Basic Concepts',subject:'Economics',type:'PDF',size:'1.5 MB',uploaded:'8 Mar 2026'},
+    {key:'m6',name:'Sociology — Society & Culture',subject:'Sociology',type:'PDF',size:'2.2 MB',uploaded:'5 Mar 2026'},
+  ];
+  return base;
+}
+
+function renderMaterials(list) {
+  var el = document.getElementById('materials-list');
+  if(!list.length){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:30px">No materials found</div>';return;}
+  el.innerHTML = list.map(function(m) {
+    return '<div class="mat-item"><div class="mat-icon pdf">📄</div><div class="mat-info"><div class="mat-name">'+m.name+'</div><div class="mat-meta"><span>📁 '+m.subject+'</span><span>📋 '+m.type+'</span>'+(m.size?'<span>💾 '+m.size+'</span>':'')+(m.uploaded?'<span>📅 '+m.uploaded+'</span>':'')+'</div></div><div class="mat-actions"><button class="btn-dl" onclick="downloadMat(this,\''+m.name+'\')">⬇️ Download</button></div></div>';
+  }).join('');
+}
+
+function filterMaterials() {
+  var f = document.getElementById('mat-filter').value;
+  renderMaterials(f==='all'?allMaterials:allMaterials.filter(function(m){return (m.subject||'General')===f;}));
+}
+
+function downloadMat(btn, name) {
+  var orig = btn.textContent;
+  btn.textContent = '✅ Done!';
+  btn.style.background = 'var(--secondary)';
+  setTimeout(function(){btn.textContent=orig;btn.style.background='';},2500);
+  lmsToast('📥 Downloading: '+name,'success');
+
+  // Track in progress
+  if(currentLmsUser) {
+    var key = 'progress_'+currentLmsUser.id+'_materials';
+    var current = parseInt(localStorage.getItem(key)||0) + 1;
+    localStorage.setItem(key, current);
+    updateProgressDash();
+  }
+}
+
+// ===== VIDEO LECTURES =====
+function loadVideos(user) {
+  dbOn('lmsVideos', function(snap) {
+    var data = snap.val() || {};
+    allVideos = Object.entries(data).map(function(e){return {key:e[0],...e[1]};});
+    if(user.programme && user.programme !== 'All') {
+      allVideos = allVideos.filter(function(v){return !v.programme||v.programme==='All'||v.programme===user.programme;});
+    }
+    document.getElementById('dc-videos').textContent = allVideos.length;
+    if(!allVideos.length) {
+      allVideos = getDemoVideos();
+      document.getElementById('dc-videos').textContent = allVideos.length;
+    }
+    renderVideos(allVideos);
+  });
+}
+
+function getDemoVideos() {
+  return [
+    {key:'v1',title:'Hindi Literature — Kabir Das ke Dohe',subject:'Hindi',duration:'28 min',youtubeId:'dQw4w9WgXcQ',thumb:'📺'},
+    {key:'v2',title:'English — Parts of Speech',subject:'English',duration:'35 min',youtubeId:'dQw4w9WgXcQ',thumb:'📺'},
+    {key:'v3',title:'Indian Constitution — Preamble',subject:'Pol. Science',duration:'42 min',youtubeId:'dQw4w9WgXcQ',thumb:'📺'},
+    {key:'v4',title:'Ancient India — Indus Valley Civilization',subject:'History',duration:'38 min',youtubeId:'dQw4w9WgXcQ',thumb:'📺'},
+    {key:'v5',title:'Introduction to Economics',subject:'Economics',duration:'32 min',youtubeId:'dQw4w9WgXcQ',thumb:'📺'},
+  ];
+}
+
+function renderVideos(list) {
+  var el = document.getElementById('videos-list');
+  if(!list.length){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:30px">No videos available</div>';return;}
+  el.innerHTML = list.map(function(v) {
+    return '<div class="mat-item"><div class="mat-icon video" style="font-size:28px">🎥</div><div class="mat-info"><div class="mat-name">'+v.title+'</div><div class="mat-meta"><span>📁 '+v.subject+'</span>'+(v.duration?'<span>⏱️ '+v.duration+'</span>':'')+'</div></div><div class="mat-actions"><button class="btn-watch" onclick="watchVideo(\''+v.youtubeId+'\',\''+v.title+'\')">▶️ Watch</button></div></div>';
+  }).join('');
+}
+
+function watchVideo(ytId, title) {
+  document.getElementById('video-title').textContent = title;
+  document.getElementById('video-iframe').src = 'https://www.youtube.com/embed/'+ytId+'?autoplay=1';
+  document.getElementById('videoModal').classList.add('open');
+  // Track progress
+  if(currentLmsUser) {
+    var key = 'progress_'+currentLmsUser.id+'_videos';
+    var current = parseInt(localStorage.getItem(key)||0) + 1;
+    localStorage.setItem(key, current);
+    updateProgressDash();
+  }
+}
+
+function closeVideo() {
+  document.getElementById('video-iframe').src = '';
+  document.getElementById('videoModal').classList.remove('open');
+}
+
+// ===== TIMETABLE =====
+function loadTimetable(user) {
+  dbGet('lmsTimetable').then(function(snap) {
+    var data = snap.val();
+    if(data) renderTimetable(data);
+    else renderDemoTimetable();
+  }).catch(function(){renderDemoTimetable();});
+}
+
+function renderDemoTimetable() {
+  var days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var slots = [
+    {day:'Monday',time:'9:00 AM',subject:'Hindi',teacher:'Dr. Sharma'},
+    {day:'Monday',time:'11:00 AM',subject:'English',teacher:'Prof. Das'},
+    {day:'Tuesday',time:'10:00 AM',subject:'History',teacher:'Mr. Kalita'},
+    {day:'Wednesday',time:'9:00 AM',subject:'Pol. Science',teacher:'Dr. Borah'},
+    {day:'Wednesday',time:'11:00 AM',subject:'Economics',teacher:'Ms. Gogoi'},
+    {day:'Thursday',time:'10:00 AM',subject:'Sociology',teacher:'Mr. Roy'},
+    {day:'Friday',time:'9:00 AM',subject:'Hindi',teacher:'Dr. Sharma'},
+    {day:'Saturday',time:'10:00 AM',subject:'Revision Class',teacher:'All Faculty'},
+  ];
+  var grid = document.getElementById('timetable-grid');
+  var html = days.map(function(d){return '<div class="tt-day">'+d+'</div>';}).join('');
+  days.forEach(function(day) {
+    var daySlots = slots.filter(function(s){return s.day===day;});
+    if(daySlots.length) {
+      daySlots.forEach(function(s) {
+        html += '<div class="tt-slot has-class"><div class="tt-subj">'+s.subject+'</div><div class="tt-time">'+s.time+'</div><div style="font-size:10px;color:#64748b">'+s.teacher+'</div></div>';
+      });
+    } else {
+      html += '<div class="tt-slot empty">No Class</div>';
+    }
+  });
+  grid.innerHTML = html;
+}
+
+function renderTimetable(data) {
+  renderDemoTimetable(); // Use demo for now
+}
+
+// ===== ASSIGNMENTS =====
+function loadAssignments(user) {
+  dbOn('lmsAssignments', function(snap) {
+    var data = snap.val() || {};
+    allAssignments = Object.entries(data).map(function(e){return {key:e[0],...e[1]};});
+    if(user.programme && user.programme !== 'All') {
+      allAssignments = allAssignments.filter(function(a){return !a.programme||a.programme==='All'||a.programme===user.programme;});
+    }
+    if(!allAssignments.length) allAssignments = getDemoAssignments();
+    renderAssignments(allAssignments);
+    updateAssignmentCount();
+  });
+}
+
+function loadSubmittedAssignments(user) {
+  if(!user) return;
+  dbGet('submissions/'+user.id.replace(/\//g,'_')).then(function(snap) {
+    submittedAssignments = snap.val() || {};
+    renderAssignments(allAssignments);
+    updateAssignmentCount();
+  }).catch(function(){});
+}
+
+function getDemoAssignments() {
+  return [
+    {key:'a1',title:'Hindi Essay — Mera Priya Neta',subject:'Hindi',desc:'500 shabdon mein apne priya neta ke baare mein nibandh likhiye. Unki uplabdhiyon ka zikr karen.',dueDate:'30 Mar 2026',marks:20},
+    {key:'a2',title:'English Comprehension — Passage Reading',subject:'English',desc:'Given passage ko padhkar 5 questions ke jawab likhiye. Answers must be in complete sentences.',dueDate:'28 Mar 2026',marks:15},
+    {key:'a3',title:'Political Science — Democracy Essay',subject:'Pol. Science',desc:'Loktantra ki visheshataon par 400 shabdon mein nibandh taiyar karen.',dueDate:'02 Apr 2026',marks:25},
+    {key:'a4',title:'History — Mughal Empire Summary',subject:'History',desc:'Mughal samrajya ke uday aur patan ka sankshipt vivaran Karen.',dueDate:'05 Apr 2026',marks:20},
+  ];
+}
+
+function updateAssignmentCount() {
+  var pending = allAssignments.filter(function(a){return !submittedAssignments[a.key];}).length;
+  document.getElementById('dc-assignments').textContent = pending;
+  document.getElementById('pending-assign-count').textContent = pending;
+  var dashEl = document.getElementById('dash-recent-assign');
+  if(dashEl) {
+    dashEl.innerHTML = allAssignments.slice(0,3).map(function(a) {
+      var done = submittedAssignments[a.key];
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:700;color:var(--primary)">'+a.title+'</div><div style="display:flex;justify-content:space-between;margin-top:4px"><span style="font-size:12px;color:var(--text2)">Due: '+a.dueDate+'</span><span class="badge '+(done?'badge-green':'badge-red')+'">'+(done?'✅ Submitted':'⏳ Pending')+'</span></div></div>';
+    }).join('');
+  }
+}
+
+function filterAssignments() {
+  var f = document.getElementById('assign-filter').value;
+  if(f==='all') renderAssignments(allAssignments);
+  else if(f==='pending') renderAssignments(allAssignments.filter(function(a){return !submittedAssignments[a.key];}));
+  else renderAssignments(allAssignments.filter(function(a){return submittedAssignments[a.key];}));
+}
+
+function renderAssignments(list) {
+  var el = document.getElementById('assignments-list');
+  if(!list.length){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:30px">No assignments found</div>';return;}
+  el.innerHTML = list.map(function(a) {
+    var submitted = submittedAssignments[a.key];
+    var dueDate = new Date(a.dueDate);
+    var now = new Date();
+    var isOverdue = dueDate < now && !submitted;
+    return '<div class="assign-item">'+
+      '<div class="assign-header">'+
+        '<div><div class="assign-title">'+a.title+'</div>'+
+        '<div class="assign-meta"><span>📁 '+a.subject+'</span><span>📅 Due: '+a.dueDate+'</span><span>📊 Marks: '+(a.marks||'--')+'</span></div></div>'+
+        '<span class="assign-due '+(submitted?'submitted':isOverdue?'':'ok')+'">'+
+          (submitted?'✅ Submitted':isOverdue?'⚠️ Overdue':'📅 Pending')+
+        '</span>'+
+      '</div>'+
+      '<div class="assign-desc">'+a.desc+'</div>'+
+      (submitted?
+        '<div class="assign-submitted-badge">✅ You submitted this assignment on '+submittedAssignments[a.key].date+'</div>':
+        '<div class="assign-submit-area">'+
+          '<textarea class="assign-textarea" id="ans-'+a.key+'" placeholder="Write your answer here..."></textarea>'+
+          '<button class="btn-submit-assign" onclick="submitAssignment(\''+a.key+'\',\''+a.title+'\')">📤 Submit</button>'+
+        '</div>'
+      )+
+    '</div>';
+  }).join('');
+}
+
+function submitAssignment(key, title) {
+  var answer = document.getElementById('ans-'+key);
+  if(!answer||!answer.value.trim()){lmsToast('⚠️ Please write your answer first!','error');return;}
+  if(!currentLmsUser){lmsToast('Please login first','error');return;}
+  var userId = currentLmsUser.id.replace(/\//g,'_');
+  var subData = {answer:answer.value.trim(),date:new Date().toLocaleDateString('en-IN'),studentId:currentLmsUser.id,studentName:currentLmsUser.name,assignmentTitle:title,submittedAt:new Date().toISOString()};
+  dbSet('submissions/'+userId+'/'+key, subData).then(function() {
+    submittedAssignments[key] = subData;
+    lmsToast('✅ Assignment submitted!','success');
+    renderAssignments(allAssignments);
+    updateAssignmentCount();
+    updateProgressDash();
+  }).catch(function(e){lmsToast('Error: '+e.message,'error');});
+}
+
+// ===== QUIZ =====
+function loadQuizzes(user) {
+  dbOn('lmsQuizzes', function(snap) {
+    var data = snap.val() || {};
+    allQuizzes = Object.entries(data).map(function(e){return {key:e[0],...e[1]};});
+    if(!allQuizzes.length) allQuizzes = getDemoQuizzes();
+    renderQuizList(allQuizzes);
+  });
+}
+
+function getDemoQuizzes() {
+  return [
+    {key:'q1',title:'Hindi Literature Quiz',subject:'Hindi',questions:10,duration:15,marks:20,
+      qs:[
+        {q:'Kabir Das kis yug ke kavi the?',opts:['Bhakti Kal','Adi Kal','Riti Kal','Aadhunik Kal'],ans:0},
+        {q:'"Sakhi" kiski rachna hai?',opts:['Tulsidas','Kabir Das','Mirabai','Surdas'],ans:1},
+        {q:'Ramacharitmanas kine ne likha?',opts:['Kabir Das','Surdas','Tulsidas','Mirabai'],ans:2},
+        {q:'Hindi bhasha ki lipi kya hai?',opts:['Roman','Arabic','Devanagari','Gujarati'],ans:2},
+        {q:'Premchand ka mool naam kya tha?',opts:['Munshi Ram','Dhanpat Rai','Ram Lal','Hari Shankar'],ans:1},
+      ]},
+    {key:'q2',title:'Indian History Quiz',subject:'History',questions:8,duration:12,marks:16,
+      qs:[
+        {q:'Indus Valley Civilization kab ki thi?',opts:['1000 BC','2500 BC','500 BC','3500 BC'],ans:1},
+        {q:'Ashoka ka dharm kya tha?',opts:['Hinduism','Jainism','Buddhism','Islam'],ans:2},
+        {q:'1857 ki kranti ka netritva kisne kiya?',opts:['Rani Laxmibai','Gandhi Ji','Nehru','Patel'],ans:0},
+        {q:'India ko azadi kab mili?',opts:['1945','1947','1950','1952'],ans:1},
+        {q:'Pehle pradhanmantri kaun the?',opts:['Sardar Patel','Dr. Rajendra Prasad','Jawaharlal Nehru','B.R. Ambedkar'],ans:2},
+      ]},
+    {key:'q3',title:'Political Science Quiz',subject:'Pol. Science',questions:10,duration:15,marks:20,
+      qs:[
+        {q:'Indian Constitution kab lagu hua?',opts:['15 Aug 1947','26 Jan 1950','2 Oct 1949','1 Nov 1950'],ans:1},
+        {q:'Lok Sabha mein kitni seats hain?',opts:['250','543','545','550'],ans:1},
+        {q:'Rajya Sabha ke sadasyoN ka karyakaal kitna hota hai?',opts:['4 saal','5 saal','6 saal','7 saal'],ans:2},
+        {q:'Preamble mein kya hai?',opts:['Niyam','Samvidhan ka saar','Adhiniyam','Kanoon'],ans:1},
+        {q:'Supreme Court ke mukhya nyayaadheesh ki niyukti kaun karta hai?',opts:['PM','President','Speaker','CEC'],ans:1},
+      ]},
+  ];
+}
+
+function renderQuizList(list) {
+  var el = document.getElementById('quiz-list');
+  if(!list.length){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:30px">No quizzes available</div>';return;}
+  el.innerHTML = list.map(function(q) {
+    var done = quizResults[q.key];
+    return '<div class="quiz-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'+
+        '<div><div class="quiz-title">'+q.title+'</div>'+
+        '<div class="quiz-meta">📁 '+q.subject+' &nbsp;|&nbsp; ❓ '+q.questions+' Questions &nbsp;|&nbsp; ⏱️ '+q.duration+' min &nbsp;|&nbsp; 📊 '+q.marks+' Marks</div></div>'+
+        (done?'<span class="badge badge-green">✅ Score: '+done.score+'/'+done.total+'</span>':'')+
+      '</div>'+
+      '<div style="margin-top:12px">'+
+        '<button class="quiz-start-btn" onclick="startQuiz(\''+q.key+'\')">'+
+          (done?'🔄 Retake Quiz':'▶️ Start Quiz')+
+        '</button>'+
+        (done?'<span style="margin-left:12px;font-size:13px;color:var(--text2)">Last score: '+done.score+'/'+done.total+' ('+Math.round(done.score/done.total*100)+'%)</span>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function startQuiz(key) {
+  var quiz = allQuizzes.find(function(q){return q.key===key;});
+  if(!quiz){lmsToast('Quiz not found','error');return;}
+  if(!quiz.qs||!quiz.qs.length){lmsToast('No questions in this quiz','error');return;}
+  currentQuiz = quiz;
+  currentQIndex = 0;
+  quizAnswers = {};
+  document.getElementById('quiz-overlay-title').textContent = quiz.title;
+  quizTimeLeft = (quiz.duration||15)*60;
+  document.getElementById('quizOverlay').classList.add('open');
+  renderQuizQuestion();
+  startQuizTimer();
+}
+
+function renderQuizQuestion() {
+  if(!currentQuiz) return;
+  var q = currentQuiz.qs[currentQIndex];
+  var total = currentQuiz.qs.length;
+  document.getElementById('quiz-q-counter').textContent = 'Question '+(currentQIndex+1)+' of '+total;
+  document.getElementById('quiz-q-indicator').textContent = (currentQIndex+1)+'/'+total;
+  document.getElementById('quiz-prog-fill').style.width = ((currentQIndex+1)/total*100)+'%';
+  var opts = ['A','B','C','D'];
+  var html = '<div class="quiz-question-card">'+
+    '<div class="quiz-q-num">Question '+(currentQIndex+1)+' of '+total+'</div>'+
+    '<div class="quiz-q-text">'+q.q+'</div>'+
+    q.opts.map(function(opt,i){
+      return '<div class="quiz-option '+(quizAnswers[currentQIndex]===i?'selected':'')+'" onclick="selectQuizOption('+i+')">'+
+        '<div class="quiz-option-circle">'+opts[i]+'</div>'+opt+
+      '</div>';
+    }).join('')+
+  '</div>';
+  document.getElementById('quiz-question-area').innerHTML = html;
+  document.getElementById('quiz-prev-btn').style.display = currentQIndex===0?'none':'block';
+  var isLast = currentQIndex === currentQuiz.qs.length-1;
+  var nextBtn = document.getElementById('quiz-next-btn');
+  nextBtn.textContent = isLast?'Submit Quiz ✅':'Next →';
+  nextBtn.className = 'quiz-btn '+(isLast?'quiz-btn-submit':'quiz-btn-next');
+}
+
+function selectQuizOption(i) {
+  quizAnswers[currentQIndex] = i;
+  renderQuizQuestion();
+}
+
+function quizPrev() { if(currentQIndex>0){currentQIndex--;renderQuizQuestion();} }
+function quizNext() {
+  if(currentQIndex < currentQuiz.qs.length-1) {
+    currentQIndex++;
+    renderQuizQuestion();
+  } else {
+    submitQuiz();
+  }
+}
+
+function submitQuiz() {
+  clearInterval(quizTimerInterval);
+  var score = 0;
+  currentQuiz.qs.forEach(function(q,i){
+    if(quizAnswers[i]===q.ans) score++;
+  });
+  var total = currentQuiz.qs.length;
+  var pct = Math.round(score/total*100);
+  var pass = pct >= 50;
+  quizResults[currentQuiz.key] = {score:score,total:total,pct:pct};
+
+  // Save to Firebase
+  if(currentLmsUser) {
+    var userId = currentLmsUser.id.replace(/\//g,'_');
+    dbSet('quizResults/'+userId+'/'+currentQuiz.key, {score,total,pct,date:new Date().toLocaleDateString('en-IN'),quizTitle:currentQuiz.title});
+  }
+
+  // Show result
+  document.getElementById('quiz-question-area').innerHTML =
+    '<div class="quiz-result">'+
+      '<div style="font-size:48px">'+(pass?'🏆':'📚')+'</div>'+
+      '<div class="quiz-result-score '+(pass?'pass':'fail')+'">'+score+'/'+total+'</div>'+
+      '<div style="font-size:18px;font-weight:700;color:var(--text);margin:8px 0">'+(pass?'Excellent! Quiz Passed! 🎉':'Keep Studying! Try Again 💪')+'</div>'+
+      '<div style="font-size:15px;color:var(--text2);margin-bottom:20px">You scored '+pct+'% — '+score+' correct out of '+total+' questions</div>'+
+      (pass?
+        '<div style="background:#dcfce7;border-radius:10px;padding:14px;font-size:13.5px;color:var(--green);margin-bottom:20px">✅ Pass criteria is 50%. Congratulations!</div>':
+        '<div style="background:#fee2e2;border-radius:10px;padding:14px;font-size:13.5px;color:var(--red);margin-bottom:20px">❌ You need 50% to pass. Review your notes and try again!</div>'
+      )+
+      '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'+
+        '<button onclick="closeQuizOverlay()" style="padding:12px 22px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif">Done ✓</button>'+
+        '<button onclick="startQuiz(\''+currentQuiz.key+'\')" style="padding:12px 22px;background:var(--bg);color:var(--primary);border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif">Retake 🔄</button>'+
+      '</div>'+
+    '</div>';
+  document.getElementById('quiz-nav').style.display = 'none';
+  renderQuizList(allQuizzes);
+  updateProgressDash();
+}
+
+function closeQuizOverlay() {
+  document.getElementById('quizOverlay').classList.remove('open');
+  document.getElementById('quiz-nav').style.display = '';
+  loadQuizHistory(currentLmsUser);
+}
+
+function startQuizTimer() {
+  clearInterval(quizTimerInterval);
+  quizTimerInterval = setInterval(function() {
+    quizTimeLeft--;
+    var mins = Math.floor(quizTimeLeft/60);
+    var secs = quizTimeLeft%60;
+    document.getElementById('quiz-timer').textContent = (mins<10?'0':'')+mins+':'+(secs<10?'0':'')+secs;
+    if(quizTimeLeft<=60) document.getElementById('quiz-timer').style.color='#ef4444';
+    if(quizTimeLeft<=0){clearInterval(quizTimerInterval);submitQuiz();}
+  },1000);
+}
+
+// ===== PROGRESS =====
+function loadStudentProgress(user) {
+  updateProgressDash();
+}
+
+function updateProgressDash() {
+  if(!currentLmsUser) return;
+  var matsDone = parseInt(localStorage.getItem('progress_'+currentLmsUser.id+'_materials')||0);
+  var vidsDone = parseInt(localStorage.getItem('progress_'+currentLmsUser.id+'_videos')||0);
+  var assignDone = Object.keys(submittedAssignments).length;
+  var quizDone = Object.keys(quizResults).length;
+  var totalItems = allMaterials.length + allVideos.length + allAssignments.length + allQuizzes.length;
+  var completedItems = Math.min(matsDone,allMaterials.length) + Math.min(vidsDone,allVideos.length) + assignDone + quizDone;
+  var overallPct = totalItems>0 ? Math.round(completedItems/totalItems*100) : 0;
+  document.getElementById('dc-progress').textContent = overallPct+'%';
+
+  var matPct = allMaterials.length>0?Math.min(100,Math.round(matsDone/allMaterials.length*100)):0;
+  var vidPct = allVideos.length>0?Math.min(100,Math.round(vidsDone/allVideos.length*100)):0;
+  var asnPct = allAssignments.length>0?Math.round(assignDone/allAssignments.length*100):0;
+  var quizPct = allQuizzes.length>0?Math.round(quizDone/allQuizzes.length*100):0;
+
+  var progEl = document.getElementById('dash-progress-bars');
+  if(progEl) {
+    progEl.innerHTML = [
+      {label:'Study Materials',pct:matPct,cls:'prog-blue'},
+      {label:'Video Lectures',pct:vidPct,cls:'prog-gold'},
+      {label:'Assignments',pct:asnPct,cls:'prog-green'},
+      {label:'Quizzes',pct:quizPct,cls:'prog-blue'},
+    ].map(function(p){
+      return '<div class="prog-bar-wrap"><div class="prog-bar-label"><span>'+p.label+'</span><span>'+p.pct+'%</span></div><div class="prog-bar"><div class="prog-bar-fill '+p.cls+'" style="width:'+p.pct+'%"></div></div></div>';
+    }).join('');
+  }
+
+  var progContent = document.getElementById('progress-content');
+  if(progContent) {
+    progContent.innerHTML =
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">'+
+        [
+          {icon:'📄',val:matsDone+'/'+allMaterials.length,label:'Materials Read'},
+          {icon:'🎥',val:vidsDone+'/'+allVideos.length,label:'Videos Watched'},
+          {icon:'📝',val:assignDone+'/'+allAssignments.length,label:'Assignments Done'},
+          {icon:'🧠',val:quizDone+'/'+allQuizzes.length,label:'Quizzes Taken'},
+        ].map(function(s){
+          return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center"><div style="font-size:26px">'+s.icon+'</div><div style="font-family:\'Syne\',sans-serif;font-size:22px;font-weight:900;color:var(--primary);margin:6px 0">'+s.val+'</div><div style="font-size:12px;color:var(--text2)">'+s.label+'</div></div>';
+        }).join('')+
+      '</div>'+
+      '<div class="prog-bar-wrap"><div class="prog-bar-label"><span style="font-size:14px;font-weight:700">Overall Course Progress</span><span style="font-size:16px;font-weight:900;color:var(--primary)">'+overallPct+'%</span></div><div class="prog-bar" style="height:14px"><div class="prog-bar-fill prog-blue" style="width:'+overallPct+'%"></div></div></div>';
+  }
+}
+
+function loadQuizHistory(user) {
+  if(!user) return;
+  var userId = user.id.replace(/\//g,'_');
+  dbGet('quizResults/'+userId).then(function(snap) {
+    var data = snap.val() || {};
+    quizResults = data;
+    var el = document.getElementById('quiz-history');
+    var items = Object.entries(data);
+    if(!items.length){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:13px">No quiz attempts yet</div>';return;}
+    el.innerHTML = '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:var(--primary);color:#fff"><th style="padding:10px 14px;text-align:left;font-size:12px">Quiz</th><th style="padding:10px 14px;text-align:left;font-size:12px">Score</th><th style="padding:10px 14px;text-align:left;font-size:12px">Percentage</th><th style="padding:10px 14px;text-align:left;font-size:12px">Date</th><th style="padding:10px 14px;text-align:left;font-size:12px">Result</th></tr></thead>'+
+      '<tbody>'+items.map(function(e){
+        var r=e[1];
+        return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:11px 14px;font-size:13px;font-weight:600">'+r.quizTitle+'</td><td style="padding:11px 14px;font-size:13px;font-weight:700;color:var(--primary)">'+r.score+'/'+r.total+'</td><td style="padding:11px 14px;font-size:13px">'+r.pct+'%</td><td style="padding:11px 14px;font-size:12px;color:var(--text2)">'+r.date+'</td><td style="padding:11px 14px"><span class="badge '+(r.pct>=50?'badge-green':'badge-red')+'">'+(r.pct>=50?'✅ Pass':'❌ Fail')+'</span></td></tr>';
+      }).join('')+
+      '</tbody></table>';
+  }).catch(function(){});
+}
+
+// ===== PANEL NAVIGATION =====
+var lmsPanelTitles = {
+  dashboard:'Dashboard', materials:'Study Materials', videos:'Video Lectures',
+  timetable:'Class Timetable', assignments:'Assignments', quiz:'Quiz & Tests', progress:'My Progress'
+};
+function showLmsPanel(id, btn) {
+  document.querySelectorAll('.lms-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.lms-nav-link').forEach(function(l){l.classList.remove('active');});
+  document.getElementById('lpan-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('lmsPanelTitle').textContent = lmsPanelTitles[id]||id;
+  if(window.innerWidth<900) document.getElementById('lmsSidebar').classList.remove('open');
+}
+
+// ===== LOGOUT =====
+function lmsLogout() {
+  currentLmsUser = null;
+  document.getElementById('lmsApp').classList.remove('show');
+  document.getElementById('lmsLogin').style.display = 'flex';
+  document.getElementById('ls-enroll').value = '';
+  document.getElementById('ls-pass').value = '';
+  lmsToast('👋 Logged out successfully!','info');
+}
+</script>
+
+<!-- Quiz Nav fix -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Fix quiz nav reference
+  var nav = document.querySelector('.quiz-nav');
+  if(nav) nav.id = 'quiz-nav';
+});
+</script>
+
+
+<script>
+// ===== BACK BUTTON HANDLER =====
+history.pushState({page: 'lms'}, 'AODLC LMS', window.location.href);
+
+window.addEventListener('popstate', function(e) {
+  window.location.href = 'index.html';
+});
+</script>
+
+</body>
+</html>
